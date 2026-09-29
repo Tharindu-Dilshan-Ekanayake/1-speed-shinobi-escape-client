@@ -116,33 +116,46 @@ function DevHook() {
   return null
 }
 
+/** Longest the loading screen waits for the Bloxity session and the saved progress. */
+const ACCOUNT_WAIT_MS = 15000
+
 export function GameScene() {
   const { game } = useBloxity()
   const playerBodyRef = useRef(null)
 
   const [avatarReady, setAvatarReady] = useState(false)
+  const accountReady = useGameStore((s) => s.accountReady)
   const [dpr, setDpr] = useState(1.4)
   const loadingEnded = useRef(false)
+  const ready = avatarReady && accountReady
 
   const handleAvatarReady = useCallback(() => setAvatarReady(true), [])
+
+  // The player is signed in on the Bloxity site already: the loading screen waits for
+  // that session and their saved progress, so the game opens as them. If the SDK or
+  // the save server never answers, open anyway after a while.
+  useEffect(() => {
+    const id = setTimeout(() => useGameStore.setState({ accountReady: true }), ACCOUNT_WAIT_MS)
+    return () => clearTimeout(id)
+  }, [])
 
   // Only end the loading screen once the avatar has finished assembling *and* a
   // frame has rendered with it in place.
   const handleFirstFrame = useCallback(() => {
-    if (loadingEnded.current || !avatarReady) return
+    if (loadingEnded.current || !ready) return
     loadingEnded.current = true
     game.loadingEnd()
     useGameStore.setState({ loaded: true })
-  }, [avatarReady, game])
+  }, [ready, game])
 
   // The first frame usually renders before the avatar finishes downloading, so the
   // frame callback alone isn't enough — close the loading screen here too.
   useEffect(() => {
-    if (!avatarReady || loadingEnded.current) return
+    if (!ready || loadingEnded.current) return
     loadingEnded.current = true
     game.loadingEnd()
     useGameStore.setState({ loaded: true })
-  }, [avatarReady, game])
+  }, [ready, game])
 
   useEffect(() => {
     game.loadingStep('Building the Hidden Leaf…')

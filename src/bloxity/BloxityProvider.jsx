@@ -179,26 +179,10 @@ export function BloxityProvider({ gameSlug, children }) {
     }
   }, [slug])
 
-  const login = useCallback(() => {
-    const sdk = sdkRef.current || getSDK()
-    if (!sdk) {
-      console.warn('[bloxity] login() called before the SDK was ready')
-      return
-    }
-    // Login state arrives via onUserChanged — deliberately nothing to await here.
-    safeCall(sdk.auth.showAuthPopup?.bind(sdk.auth))
-  }, [])
-
   /** The signed-in player's Bloxity JWT (null for guests), for our own server. */
   const getToken = useCallback(() => {
     const sdk = sdkRef.current || getSDK()
     return safeCall(sdk?.auth?.getToken?.bind(sdk.auth)) || null
-  }, [])
-
-  const logout = useCallback(() => {
-    const sdk = sdkRef.current || getSDK()
-    if (!sdk) return
-    safeCall(sdk.auth.logout?.bind(sdk.auth))
   }, [])
 
   // Loading-screen + room helpers, exposed so gameplay code doesn't reach for
@@ -223,15 +207,13 @@ export function BloxityProvider({ gameSlug, children }) {
       isLoggedIn: Boolean(user),
       /** Always something displayable, per the getUser() || getGuest() pattern. */
       identity: user || guest,
-      login,
-      logout,
       getToken,
       avatar: equipped,
       proportions: proportions || DEFAULT_PROPORTIONS,
       game,
       gameSlug: slug,
     }),
-    [status, error, user, guest, equipped, proportions, login, logout, getToken, game, slug],
+    [status, error, user, guest, equipped, proportions, getToken, game, slug],
   )
 
   return <BloxityContext.Provider value={value}>{children}</BloxityContext.Provider>
