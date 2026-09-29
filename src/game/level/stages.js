@@ -62,6 +62,18 @@ function launchPad(B, ctx, x, y, z, vy = 24, push = 20) {
 }
 
 /**
+ * A sign right before a jump that needs a double jump, facing the runner. `y` is the
+ * ground height there; the sign floats a few units above it.
+ */
+function doubleJumpHint(B, x, y, z) {
+  B.label('Press [Space] While Jumping to Double Jump', [x, y + 3.6, z], {
+    size: 0.85,
+    color: '#ffe23a',
+    outline: '#2a1a00',
+  })
+}
+
+/**
  * Teleport trigger. `to` is where the player lands; `back` marks a Kamui trap; `fly`
  * carries the player there on a high arc (Flying Raijin) instead of an instant jump.
  */
@@ -264,6 +276,7 @@ function tower(B, ctx, z, n) {
     ],
     { color: '#e6d3a8', tex: 'tiles' },
   )
+  doubleJumpHint(B, ox, 0, z + 3)
   for (const l of [
     { gap: 7, len: 8, top: 3.2 },
     { gap: 8, len: 8, top: 6.2 },
@@ -300,6 +313,7 @@ function hall(B, ctx, z, n) {
     ],
     { color: '#5a3a22', tex: 'wood', warning: false },
   )
+  doubleJumpHint(B, ox, 0, z + 3)
   for (const l of [
     { gap: 9, len: 12, top: 1.8 },
     { gap: 8, len: 10, top: 0.8 },
@@ -329,6 +343,7 @@ function dash(B, ctx, z, n) {
   B.W.crushers.push({ p: [ox - 5, 0, z + 11], s: [5, 3, 5], drop: 7, period: 3.4, ph: 0, kind: 'stone' })
   B.W.crushers.push({ p: [ox + 5, 0, z + 11], s: [5, 3, 5], drop: 7, period: 3.4, ph: 1.7, kind: 'stone' })
   // Jump + double jump + dash clears this even at the starting run speed.
+  doubleJumpHint(B, ox, 0, z + 2)
   const gap = 20 * k
   lavaPit(B, ctx, z, gap)
   z -= gap
@@ -417,6 +432,7 @@ function hokage(B, ctx, z, n) {
     ],
     { color: T.grass, tex: 'grass' },
   )
+  doubleJumpHint(B, ox, 0, z + 3)
   for (const c of [
     { gap: 10, top: 2 },
     { gap: 12, top: 4 },
@@ -583,6 +599,7 @@ function raijin(B, ctx, z, n) {
   kunai(0, islands[0].top, c - islands[0].dz - 3, at(1))
   // On island two the kunai sits on a pillar: double jump to reach it.
   B.box(ox, islands[1].top + 1.75, c - islands[1].dz - 2.5, 2.5, 3.5, 2.5, '#6f6c66', { tex: 'stone' })
+  doubleJumpHint(B, ox, islands[1].top + 2.4, c - islands[1].dz - 1)
   kunai(0, islands[1].top + 3.5, c - islands[1].dz - 2.5, at(2))
   // On island three it hides behind a low wall.
   B.box(ox, islands[2].top + 1, c - islands[2].dz + 0.5, 10, 2, 0.8, '#6f6c66', { tex: 'stone' })
@@ -886,6 +903,7 @@ function valley(B, ctx, z, n) {
     [-1, 49],
   ].forEach(([x, dz], i) => pillar(B, ctx, x, c - dz, 4, 4, 0.6 + (i % 2) * 0.5, '#7d7f86', '#9aa39a'))
   // Ledges up the cliff, zig-zagging.
+  doubleJumpHint(B, ox, 1.1, c - 53)
   ;[
     [-5, 60, 3],
     [4, 69, 6],
