@@ -1,7 +1,7 @@
 import { useBloxity } from '../bloxity/BloxityContext'
 
 /**
- * Corner HUD.
+ * Compact profile pill in the top-right corner, above the pass shortcuts.
  *
  * Uses the `getUser() || getGuest()` pattern (surfaced as `identity` on the context)
  * so there is always a name and picture to show, even before the player logs in.
@@ -13,34 +13,21 @@ export function AuthHUD() {
   const pfp = identity?.pfp
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between p-4">
-      <div className="pointer-events-auto flex items-center gap-3 rounded-xl bg-black/50 px-3 py-2 text-white backdrop-blur">
+    <div className="pointer-events-none absolute right-[1.4rem] top-[1.2rem] z-20 flex flex-col items-end gap-2">
+      <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-black/55 py-[0.4rem] pl-[0.4rem] pr-[0.6rem] text-white backdrop-blur">
         {pfp ? (
-          <img
-            src={pfp}
-            alt=""
-            className="h-9 w-9 rounded-full object-cover ring-2 ring-white/30"
-          />
+          <img src={pfp} alt="" className="h-[3.6rem] w-[3.6rem] rounded-full object-cover ring-2 ring-white/40" />
         ) : (
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-sm font-semibold">
+          <div className="flex h-[3.6rem] w-[3.6rem] items-center justify-center rounded-full bg-white/20 text-[1.6rem] font-bold">
             {name.charAt(0).toUpperCase()}
           </div>
         )}
-
-        <div className="leading-tight">
-          <div className="text-sm font-semibold">{name}</div>
-          <div className="text-xs text-white/60">
-            {isLoggedIn ? 'Signed in with Bloxity' : 'Playing as guest'}
-          </div>
-        </div>
-      </div>
-
-      <div className="pointer-events-auto flex flex-col items-end gap-2">
+        <div className="max-w-[14rem] truncate text-[1.5rem] font-semibold leading-tight">{name}</div>
         {isLoggedIn ? (
           <button
             type="button"
             onClick={logout}
-            className="rounded-lg bg-white/10 px-3 py-2 text-sm font-medium text-white backdrop-blur transition hover:bg-white/20"
+            className="rounded-full bg-white/15 px-3 py-1 text-[1.2rem] font-semibold transition hover:bg-white/25"
           >
             Log out
           </button>
@@ -49,18 +36,18 @@ export function AuthHUD() {
             type="button"
             onClick={login}
             disabled={status !== 'ready'}
-            className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-full bg-violet-600 px-3 py-1 text-[1.2rem] font-bold transition hover:bg-violet-500 disabled:opacity-50"
           >
-            {status === 'ready' ? 'Log in with Bloxity' : 'Connecting…'}
+            {status === 'ready' ? 'Log in' : '…'}
           </button>
         )}
-
-        {status === 'error' && (
-          <div className="max-w-xs rounded-lg bg-red-600/80 px-3 py-2 text-xs text-white">
-            Bloxity SDK failed to load. {error?.message}
-          </div>
-        )}
       </div>
+
+      {status === 'error' && (
+        <div className="max-w-[26rem] rounded-lg bg-red-600/80 px-3 py-2 text-[1.1rem] text-white">
+          Bloxity SDK failed to load. {error?.message}
+        </div>
+      )}
     </div>
   )
 }

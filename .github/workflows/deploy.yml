@@ -1,0 +1,54 @@
+# Builds the game and uploads it to Bloxity Legion frontend hosting.
+# Branch dev -> dev channel (speed-shinobi-escape.dev.play.bloxity.io),
+# main -> prod (speed-shinobi-escape.play.bloxity.io).
+#
+# Needs one repository secret: LEGION_DEPLOY_TOKEN (from My Games on Bloxity).
+name: Deploy frontend
+
+on:
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GAME_ID: speed-shinobi-escape
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Pick channel
+        run: |
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            echo "CHANNEL=prod" >> "$GITHUB_ENV"
+            echo "VITE_API_URL=https://${GAME_ID}.host.bloxity.io" >> "$GITHUB_ENV"
+          else
+            echo "CHANNEL=dev" >> "$GITHUB_ENV"
+            echo "VITE_API_URL=https://${GAME_ID}.dev.host.bloxity.io" >> "$GITHUB_ENV"
+          fi
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Zip the build
+        run: cd dist && zip -r ../build.zip .
+
+      - name: Upload to Legion
+        env:
+          LEGION_DEPLOY_TOKEN: ${{ secrets.LEGION_DEPLOY_TOKEN }}
+        run: |
+          curl -sf -X POST \
+            "https://api.bloxity.io/v1/hosting/games/${GAME_ID}/frontend?channel=${CHANNEL}&version=${GITHUB_SHA}" \
+            -H "Authorization: Bearer ${LEGION_DEPLOY_TOKEN}" \
+            -H "Content-Type: application/zip" \
+            --data-binary @build.zip
