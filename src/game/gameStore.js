@@ -135,6 +135,11 @@ export const useGameStore = create(
       gateNotice: null,
       /** The world is built and the first frame is on screen (hides the loading screen). */
       loaded: false,
+      /**
+       * The Bloxity session is known and, when signed in, the account's progress has
+       * been loaded. The game opens only then, already as the right player.
+       */
+      accountReady: false,
 
       /* ---------------- derived helpers ---------------- */
 

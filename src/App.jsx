@@ -8,10 +8,10 @@ import { getGame, useGameStore } from './game/gameStore'
 import { loadCloudSave, storeCloudSave } from './game/cloudSave'
 import { fetchLeaderboard, localPlayerId, submitScore } from './game/leaderboardApi'
 import { connectLobby, sendLook } from './game/net'
-import AuthHUD from './ui/AuthHUD'
 import Hud from './ui/Hud'
 import LoadingScreen from './ui/LoadingScreen'
 import Panels from './ui/Panels'
+import ProfileBadge from './ui/ProfileBadge'
 
 const LEADERBOARD_SYNC_MS = 15000
 const CLOUD_SAVE_MS = 15000
@@ -23,10 +23,16 @@ const CLOUD_SAVE_MS = 15000
  * can never overwrite real progress.
  */
 function useAccountSave() {
-  const { user, getToken } = useBloxity()
+  const { user, getToken, status } = useBloxity()
+
+  // Signed out (or no SDK): nothing to fetch, the game can open straight away.
+  useEffect(() => {
+    if (status === 'error' || (status === 'ready' && !user)) useGameStore.setState({ accountReady: true })
+  }, [status, user])
 
   useEffect(() => {
     if (!user) return undefined
+    const settle = () => useGameStore.setState({ accountReady: true })
     let ready = false
     let stopped = false
     const push = (keepalive = false) => {
@@ -38,6 +44,7 @@ function useAccountSave() {
     const token = getToken()
     if (!token) {
       console.warn('[save] no Bloxity token available; progress stays in this browser only')
+      settle()
       return undefined
     }
     loadCloudSave(token)
@@ -49,9 +56,11 @@ function useAccountSave() {
         }
         ready = true
         if (!save?.data) push()
+        settle()
       })
       .catch(() => {
         // Server down: keep playing locally; don't upload over a save we couldn't read.
+        settle()
       })
 
     const timer = setInterval(() => push(), CLOUD_SAVE_MS)
@@ -155,7 +164,7 @@ function App() {
     <div className="relative h-screen w-screen overflow-hidden bg-sky-300">
       <GameScene />
       <Hud />
-      <AuthHUD />
+      <ProfileBadge />
       <Panels />
       <LoadingScreen />
     </div>
