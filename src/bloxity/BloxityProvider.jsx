@@ -189,6 +189,12 @@ export function BloxityProvider({ gameSlug, children }) {
     safeCall(sdk.auth.showAuthPopup?.bind(sdk.auth))
   }, [])
 
+  /** The signed-in player's Bloxity JWT (null for guests), for our own server. */
+  const getToken = useCallback(() => {
+    const sdk = sdkRef.current || getSDK()
+    return safeCall(sdk?.auth?.getToken?.bind(sdk.auth)) || null
+  }, [])
+
   const logout = useCallback(() => {
     const sdk = sdkRef.current || getSDK()
     if (!sdk) return
@@ -219,12 +225,13 @@ export function BloxityProvider({ gameSlug, children }) {
       identity: user || guest,
       login,
       logout,
+      getToken,
       avatar: equipped,
       proportions: proportions || DEFAULT_PROPORTIONS,
       game,
       gameSlug: slug,
     }),
-    [status, error, user, guest, equipped, proportions, login, logout, game, slug],
+    [status, error, user, guest, equipped, proportions, login, logout, getToken, game, slug],
   )
 
   return <BloxityContext.Provider value={value}>{children}</BloxityContext.Provider>

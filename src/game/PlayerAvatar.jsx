@@ -52,10 +52,14 @@ function fallbackMotion(delta) {
  *   rescaled rather than trusted at native size.
  */
 export const PlayerAvatar = forwardRef(function PlayerAvatar(
-  { onReady, targetHeight = 1.8, motionRef, ...props },
+  { onReady, targetHeight = 1.8, motionRef, equipped: equippedProp, proportions: proportionsProp, remote = false, ...props },
   ref,
 ) {
-  const { avatar: equipped, proportions, game } = useBloxity()
+  const ctx = useBloxity()
+  // Another player's avatar passes its own cosmetics; the local player uses the SDK's.
+  const equipped = remote ? equippedProp : ctx.avatar
+  const proportions = remote ? proportionsProp || ctx.proportions : ctx.proportions
+  const { game } = ctx
   const { scene: baseScene } = useGLTF(BASE_BODY_URL)
   const [assembled, setAssembled] = useState(false)
 
@@ -101,7 +105,7 @@ export const PlayerAvatar = forwardRef(function PlayerAvatar(
     // hat/back can be removed rather than stacking up.
     const attached = []
 
-    game.loadingStep('Loading avatar…')
+    if (!remote) game.loadingStep('Loading avatar…')
 
     const jobs = []
 
@@ -183,7 +187,7 @@ export const PlayerAvatar = forwardRef(function PlayerAvatar(
         object.traverse((child) => child.geometry?.dispose())
       }
     }
-  }, [rig, equipped, game])
+  }, [rig, equipped, game, remote])
 
   // --- Proportions -------------------------------------------------------------
   // Applied per frame rather than in an effect: every bone is reset to its rest pose

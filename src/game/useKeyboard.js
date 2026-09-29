@@ -16,8 +16,7 @@ const KEY_MAP = {
   KeyD: 'right',
   ArrowRight: 'right',
   Space: 'jump',
-  ShiftLeft: 'sprint',
-  ShiftRight: 'sprint',
+  KeyE: 'dash',
 }
 
 export function useKeyboard() {
@@ -27,7 +26,7 @@ export function useKeyboard() {
     left: false,
     right: false,
     jump: false,
-    sprint: false,
+    dash: false,
   })
 
   useEffect(() => {
@@ -37,6 +36,8 @@ export function useKeyboard() {
     }
 
     const onKeyDown = (e) => {
+      // Don't steal keys from text fields (e.g. the Bloxity login popup).
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
       if (KEY_MAP[e.code]) e.preventDefault() // stop Space scrolling the page
       set(e.code, true)
     }

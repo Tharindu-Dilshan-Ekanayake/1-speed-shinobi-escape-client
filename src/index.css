@@ -2,8 +2,14 @@
 
 :root {
   color-scheme: dark;
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Fredoka', system-ui, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* The whole HUD is sized in rem, so scaling the root font scales the HUD with the
+   window - the same trick Roblox's UIScale does. */
+html {
+  font-size: clamp(7px, min(1.6vh, 0.85vw), 18px);
 }
 
 html,
@@ -12,10 +18,284 @@ body,
   height: 100%;
   margin: 0;
   overflow: hidden;
+  user-select: none;
 }
 
 /* The R3F canvas fills its container; the HUD is absolutely positioned over it. */
 canvas {
   display: block;
   touch-action: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Roblox-style HUD pieces. In the components layer so Tailwind utilities
+   (text colours, gradients, positioning) can still override them.
+   ------------------------------------------------------------------------- */
+@layer components {
+  /* Chunky white text with a thick black outline. */
+  .rbx-text {
+    font-family: 'Fredoka', system-ui, sans-serif;
+    font-weight: 700;
+    color: #fff;
+    -webkit-text-stroke: 0.22em #111;
+    paint-order: stroke fill;
+    letter-spacing: 0.01em;
+    line-height: 1;
+  }
+  .rbx-text-thin {
+    -webkit-text-stroke-width: 0.14em;
+  }
+
+  /* The little "L" stud marks on every Roblox simulator button, drawn on a
+     pseudo-element so they sit on top of any background gradient. */
+  .studs,
+  .hazard {
+    position: relative;
+    isolation: isolate;
+  }
+  .studs::before,
+  .hazard::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+  .studs::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22'%3E%3Cpath d='M5 5v8h8' fill='none' stroke='rgba(255,255,255,0.3)' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-size: 1.6rem 1.6rem;
+  }
+  .hazard::before {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.2) 0 0.6rem,
+      rgba(255, 255, 255, 0) 0.6rem 1.2rem
+    );
+  }
+  .studs-dark {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22'%3E%3Cpath d='M5 5v8h8' fill='none' stroke='rgba(0,0,0,0.16)' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-size: 2.2rem 2.2rem;
+  }
+
+  .rbx-btn {
+    position: relative;
+    border: 0.3rem solid #151515;
+    border-radius: 1rem;
+    box-shadow:
+      inset 0 -0.45rem 0 rgba(0, 0, 0, 0.22),
+      inset 0 0.25rem 0 rgba(255, 255, 255, 0.35),
+      0 0.25rem 0 rgba(0, 0, 0, 0.35);
+    cursor: pointer;
+    transition:
+      transform 0.08s ease,
+      filter 0.1s ease;
+    pointer-events: auto;
+  }
+  .rbx-btn:hover {
+    transform: scale(1.05);
+    filter: brightness(1.08);
+  }
+  .rbx-btn:active {
+    transform: scale(0.95);
+  }
+  .rbx-btn:disabled {
+    cursor: not-allowed;
+    filter: grayscale(0.6) brightness(0.8);
+    transform: none;
+  }
+
+  .rainbow-text {
+    background: linear-gradient(90deg, #ff3040, #ffa21f, #ffe01f, #3fe04a, #2fa8ff, #a24bff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-stroke: 0;
+    filter: drop-shadow(0 0.12rem 0 #111) drop-shadow(0 -0.08rem 0 #111) drop-shadow(0.1rem 0 0 #111)
+      drop-shadow(-0.1rem 0 0 #111);
+  }
+}
+
+@keyframes spd-float {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(0.6);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -1rem) scale(1.1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -7rem) scale(1);
+  }
+}
+.spd-popup {
+  animation: spd-float 1.3s ease-out forwards;
+}
+
+/* Trophies raining down the whole screen after a stage win. */
+@keyframes win-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-12vh) rotate(0deg) scale(0.7);
+  }
+  10% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(112vh) rotate(var(--spin, 360deg)) scale(1);
+  }
+}
+.win-drop {
+  animation: win-drop var(--dur, 2.2s) linear var(--delay, 0s) both;
+}
+
+@keyframes big-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3) rotate(-6deg);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.15) rotate(3deg);
+  }
+  30% {
+    transform: translate(-50%, -50%) scale(1) rotate(0);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -80%) scale(1);
+  }
+}
+.big-popup {
+  animation: big-pop 1.8s ease-out forwards;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.8rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.toast {
+  animation: toast-in 0.2s ease-out;
+}
+
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(-8deg) scale(1);
+  }
+  50% {
+    transform: rotate(-4deg) scale(1.08);
+  }
+}
+.wiggle {
+  animation: wiggle 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse-badge {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.18);
+  }
+}
+.pulse-badge {
+  animation: pulse-badge 0.9s ease-in-out infinite;
+}
+
+.panel-in {
+  animation: toast-in 0.18s ease-out;
+}
+
+/* Loading screen: spinning shuriken and falling leaves. */
+@keyframes loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.loading-spin {
+  animation: loading-spin 0.9s linear infinite;
+}
+@keyframes loading-leaf {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(6rem, 110vh) rotate(540deg);
+    opacity: 0.9;
+  }
+}
+.loading-leaf {
+  animation: loading-leaf 6s linear infinite;
+}
+
+/* Locked stage gate notice: drops in, the padlock rattles. */
+@keyframes gate-notice-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-1.2rem) scale(0.92);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(0.2rem) scale(1.02);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+.gate-notice {
+  animation: gate-notice-in 0.32s ease-out;
+}
+@keyframes lock-shake {
+  0%,
+  60%,
+  100% {
+    transform: rotate(0deg);
+  }
+  10%,
+  30%,
+  50% {
+    transform: rotate(-12deg);
+  }
+  20%,
+  40% {
+    transform: rotate(12deg);
+  }
+}
+.lock-shake {
+  animation: lock-shake 1.4s ease-in-out infinite;
+}
+
+/* Aura shop swatches breathe with their colour. */
+@keyframes aura-breathe {
+  0%,
+  100% {
+    box-shadow: inset 0 0 1.2rem var(--aura);
+  }
+  50% {
+    box-shadow: inset 0 0 2.6rem var(--aura);
+  }
+}
+.aura-swatch {
+  animation: aura-breathe 1.8s ease-in-out infinite;
 }
